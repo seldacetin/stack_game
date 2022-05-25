@@ -28,9 +28,18 @@ public class stack : MonoBehaviour
     public Color32 renk2;
     public Text textimiz;
     public GameObject g_panel;
+    int high_score;
+    public Text high_score_Text;
+    int sayac = 0;
+    Camera camera;
 
 
     void Start(){
+        high_score = PlayerPrefs.GetInt("highscore");
+        high_score_Text.text = high_score.ToString();
+        textimiz.text = skor.ToString() ;
+        camera = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<Camera>();
+        camera.backgroundColor = renk2;
         renk=renk1;
         stack_uzunlugu = transform.childCount;
         go_stack = new GameObject[stack_uzunlugu];
@@ -44,30 +53,33 @@ public class stack : MonoBehaviour
     void ArtikParca0l(Vector3 konum, Vector3 scale,Color32 renkli){
         GameObject go = GameObject.CreatePrimitive(PrimitiveType.Cube);
         go.transform.localScale = scale;
-        go.transform.position = konum;
-        renk = new Color32((byte)(renk.r - 5),(byte)(renk.g - 5),(byte)(renk.b - 5),renk.a); 
+        go.transform.position = konum; 
         go_stack[stack_index].GetComponent<Renderer>().material.color = renkli;
         go.AddComponent<Rigidbody>();
     }
     
     void Update(){
         if(!dead){
-            if(Input.GetMouseButtonDown(0)){
-                if(Stack_Kontrol()){
-                    Stack_Al_Koy();
-                    caunt++;
-                    skor++;
-                    textimiz.text = skor.ToString(); 
-                    //byte deger = 1;
-                    renk = new Color32((byte)(renk.r - 5),(byte)(renk.g - 5),(byte)(renk.b - 5),renk.a);       
-                    renk2 = new Color32((byte)(renk2.r - 2),(byte)(renk2.g - 2),(byte)(renk2.b - 1),renk2.a);          
+            if (Application.platform == RuntimePlatform.WindowsEditor || Application.platform == RuntimePlatform.WindowsPlayer){
+           
+                if(Input.GetMouseButtonDown(0)){
+                    if(Stack_Kontrol()){
+                        Stack_Al_Koy();
+                        caunt++;
+                        skor++;
+                        textimiz.text = skor.ToString(); 
+                        if(skor > high_score){
+                            high_score = skor;
+                        }
+                        renk = new Color32((byte)(renk.r - 5),(byte)(renk.g - 5),(byte)(renk.b - 5),renk.a);       
+                        renk2 = new Color32((byte)(renk2.r - 2),(byte)(renk2.g - 2),(byte)(renk2.b - 1),renk2.a);          
+                        }
+                    else{
+                        Bitir();
                     }
-                else{
-                    Bitir();
+                
                 }
-            
             }
-        
             Hareketlendir();
             transform.position = Vector3.Lerp(transform.position,camera_pos,0.1f);
         }
@@ -205,6 +217,8 @@ public class stack : MonoBehaviour
         dead = true;
         go_stack[stack_index].AddComponent<Rigidbody>();
         g_panel.SetActive(true);
+        PlayerPrefs.SetInt("highscore", high_score);
+        textimiz.text = "";
     }
     public void Yeni_Oyun(){
         Application.LoadLevel(Application.loadedLevel);       
