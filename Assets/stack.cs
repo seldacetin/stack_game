@@ -1,7 +1,8 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using System.Collections;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
+   
 
 public class stack : MonoBehaviour
 {
@@ -41,7 +42,7 @@ public class stack : MonoBehaviour
         camera = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<Camera>();
         camera.backgroundColor = renk2;
         renk=renk1;
-        stack_uzunlugu = transform.childCount;
+        stack_uzunlugu = transform.GetChildCount();
         go_stack = new GameObject[stack_uzunlugu];
         for(int i=0; i<stack_uzunlugu; i++){
             go_stack[i] = transform.GetChild(i).gameObject;
@@ -54,7 +55,7 @@ public class stack : MonoBehaviour
         GameObject go = GameObject.CreatePrimitive(PrimitiveType.Cube);
         go.transform.localScale = scale;
         go.transform.position = konum; 
-        go_stack[stack_index].GetComponent<Renderer>().material.color = renkli;
+        go.GetComponent<Renderer>().material.color = renkli;
         go.AddComponent<Rigidbody>();
     }
     
@@ -63,25 +64,35 @@ public class stack : MonoBehaviour
             if (Application.platform == RuntimePlatform.WindowsEditor || Application.platform == RuntimePlatform.WindowsPlayer){
            
                 if(Input.GetMouseButtonDown(0)){
-                    if(Stack_Kontrol()){
-                        Stack_Al_Koy();
-                        caunt++;
-                        skor++;
-                        textimiz.text = skor.ToString(); 
-                        if(skor > high_score){
-                            high_score = skor;
-                        }
-                        renk = new Color32((byte)(renk.r - 5),(byte)(renk.g - 5),(byte)(renk.b - 5),renk.a);       
-                        renk2 = new Color32((byte)(renk2.r - 2),(byte)(renk2.g - 2),(byte)(renk2.b - 1),renk2.a);          
-                        }
-                    else{
-                        Bitir();
-                    }
-                
+                    Oyun();
                 }
+                Hareketlendir();
+                transform.position = Vector3.Lerp(transform.position,camera_pos,0.1f);
             }
-            Hareketlendir();
-            transform.position = Vector3.Lerp(transform.position,camera_pos,0.1f);
+            else if(Application.platform == RuntimePlatform.Android){
+                if(Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began){
+                    Oyun();
+                }
+                Hareketlendir();
+                transform.position = Vector3.Lerp(transform.position,camera_pos,0.1f);
+            }
+        }
+    }
+
+    public void Oyun(){
+        if(Stack_Kontrol()){
+            Stack_Al_Koy();
+            caunt++;
+            skor++;
+            textimiz.text = skor.ToString(); 
+            if(skor > high_score){
+                high_score = skor;
+            }
+            renk = new Color32((byte)(renk.r - 5),(byte)(renk.g - 5),(byte)(renk.b - 5),renk.a);       
+            renk2 = new Color32((byte)(renk2.r - 2),(byte)(renk2.g - 2),(byte)(renk2.b - 1),renk2.a);          
+        }
+        else{
+            Bitir();
         }
     }
     void Stack_Al_Koy(){
@@ -95,7 +106,7 @@ public class stack : MonoBehaviour
         camera_pos = new Vector3(0, -caunt, 0);
         go_stack[stack_index].transform.localScale = new Vector3(stack_boyut.x,1,stack_boyut.y);
         go_stack[stack_index].GetComponent<Renderer>().material.color = Color32.Lerp(go_stack[stack_index].GetComponent<Renderer>().material.color,renk,0.5f);
-        Camera camera =GameObject.FindGameObjectWithTag("MainCamera").GetComponent<Camera>();
+        //Camera camera =GameObject.FindGameObjectWithTag("MainCamera").GetComponent<Camera>();
         camera.backgroundColor = Color32.Lerp(camera.backgroundColor,renk2,0.1f);        
     }
     void Hareketlendir(){
@@ -191,6 +202,7 @@ public class stack : MonoBehaviour
                 go_stack[stack_index].transform.localPosition = new Vector3(eski_stack_pos.x , caunt , mid);
                 hassasiyet = go_stack[stack_index].transform.localPosition.z;
                 ArtikParca0l(konum , boyut , go_stack[stack_index].GetComponent<Renderer>().material.color);
+                combo++;
             }
             
             else{
@@ -212,15 +224,14 @@ public class stack : MonoBehaviour
         return true;
     }
     void Bitir(){
-        //Debug.Log("Game Over");
-        //Destroy(gameObject, 2f);
         dead = true;
         go_stack[stack_index].AddComponent<Rigidbody>();
         g_panel.SetActive(true);
         PlayerPrefs.SetInt("highscore", high_score);
+        high_score_Text.text = high_score.ToString();
         textimiz.text = "";
     }
     public void Yeni_Oyun(){
-        Application.LoadLevel(Application.loadedLevel);       
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);       
     }
 }
